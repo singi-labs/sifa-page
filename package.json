@@ -1,0 +1,13 @@
+{
+  "name": "sifa-academicpages",
+  "version": "0.1.0",
+  "description": "A personal academic website generated from your Sifa profile data.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && npx --yes serve dist"
+  },
+  "dependencies": {
+    "marked": "16.4.0"
+  }
+}
