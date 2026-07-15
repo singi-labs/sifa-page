@@ -4,6 +4,8 @@ A personal academic website generated from your [Sifa](https://sifa.id) profile 
 
 No login, no auth. The site is the public visitor view of your profile, rebuilt on every build.
 
+Inspired by [academicpages.github.io](https://academicpages.github.io/), the popular Jekyll template for academic personal sites. This project borrows the layout and information architecture; the implementation is independent and the data source is your Sifa (AT Protocol) profile rather than hand-edited markdown files.
+
 ## How it works
 
 The build script fetches the Markdown export of your profile from `https://sifa.id/p/<handle>.md`, splits it into sections, and renders each section as its own HTML page with a shared layout and stylesheet. Empty sections are dropped automatically.
