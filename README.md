@@ -25,7 +25,7 @@ Then preview the generated `dist/` folder:
 npx serve dist
 ```
 
-Set `SIFA_HANDLE` (or `SIFA_DID`) to your Sifa handle. Set `SIFA_BASE` to point at a different Sifa instance.
+Set `SIFA_HANDLE` (or `SIFA_DID`) to your Sifa handle.
 
 ## Deploy
 
