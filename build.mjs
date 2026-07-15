@@ -18,7 +18,14 @@ import { fetchProfile } from '@singi-labs/sifa-sdk/query/fetchers';
 import { parseSections, renderHome, renderSectionPage, sectionSlug, isSidebarOnly } from '@singi-labs/academicpages-renderer';
 import { CSS } from '@singi-labs/academicpages-renderer/style';
 
-const HANDLE = process.env.SIFA_HANDLE ?? process.env.SIFA_DID ?? 'ronentk.me';
+// Identity input. Accepts EITHER a DID or a handle and prefers the DID: a DID
+// (did:plc:..., did:web:...) is permanent, a handle is not. Anchoring the build
+// on the DID means a self-hoster who later changes their AT Protocol handle
+// doesn't break their site -- we resolve the *current* handle from the profile
+// at build time (see main()) and use it for the .md export and pretty URLs, so
+// the configured input never goes stale. SIFA_ID is the recommended unified var;
+// SIFA_DID / SIFA_HANDLE stay supported for convenience and backward compat.
+const SIFA_ID = process.env.SIFA_ID ?? process.env.SIFA_DID ?? process.env.SIFA_HANDLE ?? 'ronentk.me';
 const SIFA_BASE = process.env.SIFA_BASE ?? 'https://sifa.id';
 const OUT = 'dist';
 const config = { baseUrl: SIFA_BASE };
@@ -37,16 +44,22 @@ async function fetchText(pathname) {
 }
 
 async function main() {
-  console.log(`Building site for "${HANDLE}" from ${SIFA_BASE}...`);
-  const [profile, md] = await Promise.all([
-    fetchProfile(config, HANDLE),
-    fetchText(`/p/${HANDLE}.md`),
-  ]);
+  console.log(`Building site for "${SIFA_ID}" from ${SIFA_BASE}...`);
+  // Resolve the profile from the configured identifier first (fetchProfile takes
+  // a DID or a handle). The .md export endpoint only accepts a handle, so we read
+  // the current handle off the resolved profile rather than the raw input -- this
+  // is what makes a DID-anchored build pick up handle changes automatically.
+  const profile = await fetchProfile(config, SIFA_ID);
+  const handle = profile?.handle ?? (SIFA_ID.startsWith('did:') ? null : SIFA_ID);
+  if (!handle) {
+    throw new Error(`Could not resolve a handle for "${SIFA_ID}" (no public profile found).`);
+  }
+  const md = await fetchText(`/p/${handle}.md`);
   if (!profile && !md) {
-    throw new Error(`No public profile for "${HANDLE}" (404 on both SDK profile and .md).`);
+    throw new Error(`No public profile for "${SIFA_ID}" (404 on both SDK profile and .md).`);
   }
   const sections = md ? parseSections(md) : [];
-  console.log(`  ${profile?.displayName ?? profile?.handle ?? HANDLE} | avatar: ${profile?.avatar ? 'yes' : 'no'}`);
+  console.log(`  ${profile?.displayName ?? profile?.handle ?? handle} | avatar: ${profile?.avatar ? 'yes' : 'no'}`);
   console.log(`  sections: ${sections.length} (${sections.map((s) => s.title).join(', ') || 'none'})`);
 
   await rm(OUT, { recursive: true, force: true });
