@@ -16,7 +16,7 @@ The rendering logic lives in [`@singi-labs/academicpages-renderer`](https://gith
 
 ```bash
 npm install
-SIFA_HANDLE=yourname.example npm run build
+SIFA_ID=did:plc:xxxxxxxxxxxxxxxxxxxxxxxx npm run build
 ```
 
 Then preview the generated `dist/` folder:
@@ -25,7 +25,19 @@ Then preview the generated `dist/` folder:
 npx serve dist
 ```
 
-Set `SIFA_HANDLE` (or `SIFA_DID`) to your Sifa handle.
+Set `SIFA_ID` to your Sifa **DID** or handle. A handle also works:
+
+```bash
+SIFA_ID=yourname.example npm run build
+```
+
+### Prefer your DID for a site that never breaks
+
+`SIFA_ID` accepts either a DID (`did:plc:...` / `did:web:...`) or a handle. **Use your DID.** A DID is your permanent AT Protocol identity; a handle can change (you might move to a new domain). If you configure a handle and later change it, the build would point at the old, now-dead handle. A DID never changes, and the build resolves your *current* handle from your profile each time it runs -- so a handle change is picked up automatically on the next rebuild, with no config edit.
+
+Find your DID: open your profile on `https://sifa.id`, or resolve your handle at [`resolver.atproto.tools`](https://resolver.atproto.tools/) (enter your handle, copy the `did:plc:...` it returns).
+
+For backward compatibility, `SIFA_DID` and `SIFA_HANDLE` are still read (in that order) if `SIFA_ID` is unset.
 
 ## Deploy
 
