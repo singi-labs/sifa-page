@@ -16,7 +16,12 @@
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { cpSync } from 'node:fs';
 import { fetchProfile } from '@singi-labs/sifa-sdk/query/fetchers';
-import { buildProfileSections, renderHome, renderSectionPage } from '@singi-labs/sifa-page-renderer';
+import {
+  buildProfileSections,
+  renderHome,
+  renderSectionPage,
+  renderActivityPage,
+} from '@singi-labs/sifa-page-renderer';
 import { CSS } from '@singi-labs/sifa-page-renderer/style';
 
 // Identity input. Accepts EITHER a DID or a handle and prefers the DID: a DID
@@ -81,16 +86,38 @@ async function main() {
   console.log(`  ${profile.displayName ?? handle ?? SIFA_ID} | avatar: ${profile.avatar ? 'yes' : 'no'}`);
   console.log(`  sections: ${sections.length} (${sections.map((s) => s.title).join(', ') || 'none'})`);
 
+  // Aggregate activity for the "Now" page: the AppView serves a pre-aggregated,
+  // cached snapshot of the profile's public activity as normalized StreamCardVMs
+  // (see decisions/2026-07-17-shared-activity-stream-view-model.md), so the
+  // build fetches one payload instead of fanning out record reads. A failed or
+  // empty fetch simply omits the Now page -- the CV site still builds.
+  let vms = [];
+  try {
+    const q = handle ? `handle=${encodeURIComponent(handle)}` : `did=${encodeURIComponent(SIFA_ID)}`;
+    const res = await fetch(`${SIFA_BASE}/api/stream/snapshot?${q}`);
+    if (res.ok) vms = (await res.json()).items ?? [];
+  } catch (err) {
+    console.warn(`  activity snapshot unavailable: ${err.message}`);
+  }
+  const hasStream = vms.length > 0;
+  // Enable the "Now" nav entry across all pages when there is a stream to link.
+  const pageCtx = hasStream ? { ...renderCtx, activityStream: true } : renderCtx;
+  console.log(`  activity: ${hasStream ? `${vms.length} item(s) -> now.html` : 'none'}`);
+
   await rm(OUT, { recursive: true, force: true });
   await mkdir(OUT, { recursive: true });
   cpSync('fonts', `${OUT}/fonts`, { recursive: true });
   cpSync('assets', `${OUT}/assets`, { recursive: true });
 
-  await writeFile(`${OUT}/index.html`, renderHome(profile, sections, renderCtx));
+  await writeFile(`${OUT}/index.html`, renderHome(profile, sections, pageCtx));
   let pages = 1;
   for (const section of sections) {
     if (section.slug === 'index') continue; // About is shown on the home page
-    await writeFile(`${OUT}/${section.slug}.html`, renderSectionPage(profile, section, sections, renderCtx));
+    await writeFile(`${OUT}/${section.slug}.html`, renderSectionPage(profile, section, sections, pageCtx));
+    pages++;
+  }
+  if (hasStream) {
+    await writeFile(`${OUT}/now.html`, renderActivityPage(profile, sections, vms, pageCtx));
     pages++;
   }
   await writeFile(`${OUT}/style.css`, CSS);
