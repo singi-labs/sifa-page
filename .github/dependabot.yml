@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # Daily rather than weekly because @singi-labs/* are our own packages: a
+  # publish should become a PR (with CI on it) the next morning, not up to a
+  # week later. Third-party updates are grouped into a single PR so the daily
+  # cadence does not create noise.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      singi-labs:
+        patterns:
+          - "@singi-labs/*"
+      third-party:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@singi-labs/*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope

@@ -1,0 +1,57 @@
+name: Canary
+
+# Dogfooding check: build against the LATEST published @singi-labs/* packages,
+# ignoring the lockfile. The regular CI job installs from the lockfile so that
+# builds stay reproducible; this job deliberately does not, so a breaking
+# publish surfaces here within a day instead of on the demo deploy.
+#
+# It is intentionally NOT a required status check -- it is allowed to go red
+# without blocking PRs. Red here means "our own latest package broke us",
+# which is information, not a merge gate.
+
+on:
+  schedule:
+    # 05:30 UTC daily, after sifa-page-renderer's own canary at 05:20 -- if the
+    # renderer is broken against the latest SDK, we want to see that first.
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26
+
+      - name: Install (lockfile)
+        run: npm ci --ignore-scripts
+
+      - name: Upgrade first-party packages to latest
+        run: |
+          npm install --ignore-scripts --no-save \
+            @singi-labs/sifa-page-renderer@latest \
+            @singi-labs/sifa-sdk@latest
+          for p in sifa-page-renderer sifa-sdk; do
+            echo "resolved $p: $(node -p "require('./node_modules/@singi-labs/$p/package.json').version")"
+          done
+
+      - name: Build
+        run: npm run build
+        env:
+          SIFA_ID: ${{ vars.SIFA_ID || vars.SIFA_DEMO_ID || vars.SIFA_DEMO_HANDLE || 'gui.do' }}
+
+      - name: Verify build output
+        run: |
+          for f in dist/index.html dist/style.css; do
+            if [ ! -s "$f" ]; then
+              echo "::error::expected $f to exist and be non-empty" >&2
+              exit 1
+            fi
+          done
+          echo "build output OK"
