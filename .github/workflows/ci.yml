@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      # There are no tests or typecheck here (plain JS, no test suite), so the
+      # build IS the check: it fetches a real public profile from sifa.id and
+      # renders the full static site, which exercises the renderer and SDK
+      # pins end to end. A broken pin fails here instead of on the demo deploy.
+      - name: Build
+        run: npm run build
+        env:
+          SIFA_ID: ${{ vars.SIFA_ID || vars.SIFA_DEMO_ID || vars.SIFA_DEMO_HANDLE || 'gui.do' }}
+
+      # `now.html` is deliberately absent from this list: build.mjs only emits
+      # it when the profile has activity, so requiring it would fail CI for a
+      # quiet profile rather than for a real regression.
+      - name: Verify build output
+        run: |
+          for f in dist/index.html dist/style.css; do
+            if [ ! -s "$f" ]; then
+              echo "::error::expected $f to exist and be non-empty" >&2
+              exit 1
+            fi
+          done
+          echo "build output OK"
