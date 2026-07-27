@@ -31,7 +31,7 @@ jobs:
           # profile. SIFA_DEMO_ID / SIFA_DEMO_HANDLE stay supported for the
           # canonical demo deployment and for backward compat.
           SIFA_ID: ${{ vars.SIFA_ID || vars.SIFA_DEMO_ID || vars.SIFA_DEMO_HANDLE || 'gui.do' }}
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
   deploy:
