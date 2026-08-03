@@ -8,7 +8,7 @@
     "dev": "node build.mjs && npx --yes serve dist"
   },
   "dependencies": {
-    "@singi-labs/sifa-page-renderer": "0.2.33",
-    "@singi-labs/sifa-sdk": "0.12.20"
+    "@singi-labs/sifa-page-renderer": "0.2.34",
+    "@singi-labs/sifa-sdk": "0.12.43"
   }
 }
