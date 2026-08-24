@@ -35,7 +35,7 @@ SIFA_ID=yourname.example npm run build
 
 `SIFA_ID` accepts either a DID (`did:plc:...` / `did:web:...`) or a username. **Use your DID.** A DID is your permanent AT Protocol identity; a username can change (you might move to a new domain). If you configure a username and later change it, the build would point at the old, now-dead username. A DID never changes, and the build resolves your *current* username from your profile each time it runs -- so a username change is picked up automatically on the next rebuild, with no config edit.
 
-Find your DID: open your profile on `https://sifa.id`, or resolve your username at [`resolver.atproto.tools`](https://resolver.atproto.tools/) (enter your username, copy the `did:plc:...` it returns).
+Find your DID: open **Settings → Account** on [`sifa.id`](https://sifa.id) and copy it there.
 
 For backward compatibility, `SIFA_DID` and `SIFA_HANDLE` are still read (in that order) if `SIFA_ID` is unset.
 
