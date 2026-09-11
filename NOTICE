@@ -1,0 +1,10 @@
+sifa-page
+Copyright (c) 2026 Singi Labs
+
+This project's source code is licensed under the MIT License. See LICENSE.
+
+Bundled assets are licensed separately:
+
+- The Sifa logo assets in assets/ (Sifa artwork): MIT.
+- The iA Writer Quattro and Space Grotesk font files in fonts/: SIL Open Font
+  License 1.1. See fonts/LICENSE.txt for the font license.

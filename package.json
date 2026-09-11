@@ -2,6 +2,7 @@
   "name": "sifa-page",
   "version": "0.1.0",
   "description": "A personal website generated from your Sifa profile data.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
