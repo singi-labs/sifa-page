@@ -10,6 +10,6 @@
   },
   "dependencies": {
     "@singi-labs/sifa-page-renderer": "0.2.48",
-    "@singi-labs/sifa-sdk": "0.19.78"
+    "@singi-labs/sifa-sdk": "0.19.110"
   }
 }
